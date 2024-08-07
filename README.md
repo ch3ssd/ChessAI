@@ -7,7 +7,5 @@ Instructions:
 1. Install the latest version of python virtual environment (used python 3.12)
 2. Install software which can preprocess your images to fit model input requirements (OpenCV)
 3. Download images/files to test run the code
-4. Choose a model to train (in-process)
-   ...
 
    
