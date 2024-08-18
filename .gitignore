@@ -1,2 +1,31 @@
+<<<<<<< HEAD
+.ipynb_checkpoints/*
 .idea/*
-__pycache__/*
+.DS_Store*
+Archive
+*.pyc
+.~lock.*
+lm/libri-timit-lm.arpa
+lm/libri-timit-lm.klm
+lm/timit-lm.arpa
+lm/timit-lm.klm
+*/.ipynb_checkpoints
+
+kDS.sh
+kDS-LOCAL.sh
+
+data/*
+!enron*
+!e00*
+!live-rec-test.py
+!data-recorder.py
+# Created by https://www.toptal.com/developers/gitignore/api/intellij
+# Edit at https://www.toptal.com/developers/gitignore?templates=intellij
+
+### Intellij ###
+# Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
+# Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
+
+# User-specific stuff
+.idea/**
+
