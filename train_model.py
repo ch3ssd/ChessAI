@@ -1,9 +1,18 @@
 from fastai.vision.all import *
 import matplotlib.pyplot as plt
+import os
+
+def get_dir_path(dir_name):
+    # Get the current file's directory (tests/test_some_module.py)
+    current_file_dir = os.path.dirname(__file__)
+    dir_path = os.path.join(current_file_dir, '.', dir_name)
+    return dir_path
+
 
 def load_model(model_dir, model_filename):
+    file_path = os.path.join(model_dir, model_filename)
     dls = ImageDataLoaders.from_folder(
-        Path('C:/Users/ch3ss/PycharmProjects/ChessAI/OriginalImages'),
+        file_path,
         valid_pct=0.3,
         item_tfms=Resize(224),
         batch_tfms=aug_transforms(
@@ -37,7 +46,7 @@ def load_model(model_dir, model_filename):
 
 
 def main():
-    model_dir = Path('C:/Users/ch3ss/PycharmProjects/ChessAI/models')
+    model_dir = get_dir_path('models')
     model_filename = 'chess_piece_model.pth'
 
     learn = load_model(model_dir, model_filename)
