@@ -1,4 +1,4 @@
 .idea/*
 __pycache__/*
 .python-version
-
+tests/__pycache__/*

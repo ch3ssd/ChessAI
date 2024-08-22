@@ -3,6 +3,7 @@ import cv2
 import numpy
 import argparse
 
+
 def main():
     # Create ArgumentParser object
     parser = argparse.ArgumentParser(description="Load images and labels from a specified file path and print them")
@@ -19,6 +20,7 @@ def main():
     for image_name, label in zip(image_names, labels):
         print(f"Image: {image_name}, Label: {label}")
 
+
 def label_images(path):
     images = []
     labels = []
@@ -31,10 +33,11 @@ def label_images(path):
             if image is not None:
                 image = image / 255.0
                 images.append(image)
-                #Labels should be the specific piece type
+                # Labels should be the specific piece type
                 labels.append("king")
 
     return numpy.array(images), numpy.array(labels), image_names
+
 
 if __name__ == "__main__":
     main()
