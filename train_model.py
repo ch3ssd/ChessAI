@@ -2,6 +2,7 @@ from fastai.vision.all import *
 import matplotlib.pyplot as plt
 import os
 
+
 def get_dir_path(dir_name):
     # Get the current file's directory (tests/test_some_module.py)
     current_file_dir = os.path.dirname(__file__)
@@ -31,7 +32,7 @@ def load_model(model_dir, model_filename):
         bs=16
     )
 
-    learn = vision_learner(dls, resnet18, metrics=accuracy, wd = 1e-3)
+    learn = vision_learner(dls, resnet18, metrics=accuracy, wd=1e-3)
 
     checkpoint = torch.load(model_dir / model_filename)
     learn.model.load_state_dict(checkpoint['model_state_dict'])
@@ -51,7 +52,7 @@ def main():
 
     learn = load_model(model_dir, model_filename)
 
-    learn.fit_one_cycle(6,slice(1e-6, 1e-4), cbs=[EarlyStoppingCallback(patience=4), ReduceLROnPlateau()])
+    learn.fit_one_cycle(6, slice(1e-6, 1e-4), cbs=[EarlyStoppingCallback(patience=4), ReduceLROnPlateau()])
 
     torch.save({
         'model_state_dict': learn.model.state_dict(),
