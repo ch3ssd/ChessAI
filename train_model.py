@@ -3,17 +3,22 @@ import os
 import torch
 from torch.utils.data import ConcatDataset
 
-# Determine the device (MPS/CPU)
-def determine_device():
-    device = 'cuda' if torch.cuda.is_available() else 'cpu' if torch.backends.mps.is_available() else 'cpu'
-    print(f"device = {device}")
-    return device
-
 def get_dir_path(dir_name):
     # Get the current file's directory (tests/test_some_module.py)
     current_file_dir = os.path.dirname(__file__)
     dir_path = os.path.join(current_file_dir, '.', dir_name)
     return dir_path
+# Determine the device (CUDA/MPS/CPU)
+def determine_device():
+    device = 'cuda' if torch.cuda.is_available() else 'cpu' if torch.backends.mps.is_available() else 'cpu'
+    print(f"device = {device}")
+    return device
+
+def set_device_to_model(learn: Learner):
+    if determine_device() == "cpu":
+        learn.dls.cpu()
+    else:
+        learn.dls.cuda()
 
 def create_dataloaders_from_image(image_folder, valid_pct=0.3):
     """
@@ -59,7 +64,7 @@ def train_model(dls, model_file_path):
     else:
         learn = reload_model_from_checkpoint(model_file_path, dls)
     # Training the model
-    learn.model.to(determine_device())
+    set_device_to_model(learn)
     learn.fit_one_cycle(6, slice(1e-6, 1e-4), cbs=[EarlyStoppingCallback(patience=4), ReduceLROnPlateau()])
     #Save the model checkpoint
     torch.save({

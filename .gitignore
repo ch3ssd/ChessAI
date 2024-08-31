@@ -2,3 +2,4 @@
 __pycache__/*
 .python-version
 tests/__pycache__/*
+venv/
