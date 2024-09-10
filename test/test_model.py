@@ -1,6 +1,5 @@
 from fastai.vision.all import *
 
-
 def load_model(model_dir, model_filename):
     dls = ImageDataLoaders.from_folder(
         Path('C:/Users/ch3ss/PycharmProjects/ChessAI/TrainingImages'),
