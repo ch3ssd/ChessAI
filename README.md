@@ -47,3 +47,9 @@ Copy code
 pip install -r requirements.txt
 Usage
 After installing the dependencies, you can start using ChessAI to make predictions on chessboard images.
+=======
+Training a model to identify chess pieces based off of images of it on a chessboard. 
+
+
+Instructions:
+
