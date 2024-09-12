@@ -28,7 +28,8 @@ def create_dataloaders_from_image(image_folder, valid_pct=0.3):
                 Saturation(p=0.2, max_lighting=0.2),
                 ],
             seed=42,
-            bs=16
+            bs=16,
+            num_workers=0
         )
     return dls
 
