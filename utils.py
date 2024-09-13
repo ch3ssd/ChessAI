@@ -17,4 +17,5 @@ def set_device_to_model(learn: Learner):
     if determine_device() == "cpu":
         learn.dls.cpu()
     else:
-        learn.dls.cuda()
+        learn.model.to("cuda")
+        learn.dls.cpu()
