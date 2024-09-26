@@ -50,6 +50,8 @@ After installing the dependencies, you can start using ChessAI to make predictio
 =======
 Training a model to identify chess pieces based off of images of it on a chessboard. 
 
-
+For Windows/Linux OS
+- Install CUDA 12.1, follow the instructions below <br />
+https://developer.nvidia.com/cuda-12-1-0-download-archive?target_os=Windows&target_arch=x86_64&target_version=11
+1. Choose either Windows/Linux
 Instructions:
-
