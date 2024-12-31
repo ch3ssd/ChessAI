@@ -24,17 +24,21 @@ def main():
 def label_images(path):
     images = []
     labels = []
-    image_names = os.listdir(path)
+    image_names = []
 
-    for image_name in image_names:
-        image_path = os.path.join(path, image_name)
-        if image_path.endswith(('.jpg', '.jpeg', '.png')):
-            image = cv2.imread(image_path)
-            if image is not None:
-                image = image / 255.0
-                images.append(image)
-                # Labels should be the specific piece type
-                labels.append("king")
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            if file.endswith(('.jpg', '.jpeg', '.png')):
+                image_path = os.path.join(root, file)
+                image = cv2.imread(image_path)
+                if image is not None:
+                    image = image / 255.0  # Normalize the image
+                    images.append(image)
+
+                    # Use the folder name as the label
+                    label = os.path.basename(root)
+                    labels.append(label)
+                    image_names.append(file)
 
     return numpy.array(images), numpy.array(labels), image_names
 
