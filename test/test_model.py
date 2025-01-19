@@ -1,61 +1,123 @@
 from fastai.vision.all import *
+from pathlib import Path
+from stat_tests import calculate_entropy, classify_entropy
 
 def load_model(model_dir, model_filename):
-    dls = ImageDataLoaders.from_folder(
-        Path('C:/Users/ch3ss/PycharmProjects/ChessAI/TrainingImages'),
-        valid_pct=0.3,
-        item_tfms=Resize(224),
-        batch_tfms=aug_transforms(
-            mult=2,
-            min_scale=0.8,
-            max_zoom=1.1,
-            flip_vert=False,
-            max_rotate=10,
-            max_warp=0.1,
-            p_lighting=0.3
-        ) + [Brightness(p=0.2, max_lighting=0.2),
-             Contrast(p=0.2, max_lighting=0.2),
-             Saturation(p=0.2, max_lighting=0.2),
-             ],
-        seed=42,
-        bs=16
-    )
+    """
+    Load the trained Learner using FastAI's load_learner method.
 
-    learn = vision_learner(dls, resnet18, metrics=accuracy)
+    :param model_dir: Directory where the model file is located.
+    :param model_filename: Full filename of the exported Learner (including extension).
+    :return: Loaded Learner object.
+    """
+    model_pkl_path = Path(model_dir) / model_filename
 
-    # Load the saved weights into the model
-    checkpoint = torch.load(model_dir / model_filename)
-    learn.model.load_state_dict(checkpoint['model_state_dict'])
-    learn.opt.load_state_dict(checkpoint['optimizer_state_dict'])
+    if not model_pkl_path.exists():
+        raise FileNotFoundError(f"The model file '{model_pkl_path}' does not exist.")
 
-    # Ensure the state of the recorder is set correctly
-    learn.recorder.epoch = checkpoint['epoch']
-    learn.recorder.losses = checkpoint['loss']
-
-    print(f"Model and optimizer states loaded from {model_dir / model_filename}")
+    learn = load_learner(model_pkl_path)
+    print(f"Model loaded successfully from '{model_pkl_path}'")
     return learn
 
-def test_model(learn, image_path):
-    img = PILImage.create(image_path)
-    pred_class, pred_idx, probs = learn.predict(img)
+def predict_and_classify(learn, image_path, entropy_threshold):
+    """
+    Predict the class of a single chess piece image and classify using entropy-based measure.
 
-    class_names = learn.dls.vocab
-    print(probs)
-    if max(probs) < 0.85:
-        return "not a chess piece"
-    else:
-        return class_names[pred_idx]
+    :param learn: Loaded Learner object.
+    :param image_path: Path to the image file.
+    :param entropy_threshold: Entropy threshold for the test.
+    :return: Dictionary with image name, final label, probabilities, and entropy.
+    """
+    try:
+        img = PILImage.create(image_path)
+        pred_class, pred_idx, probs = learn.predict(img)
+        probs_list = [float(p) for p in probs]
+
+        # Perform entropy-based classification to assign Final_Label
+        final_label, entropy = classify_entropy(probs_list, learn.dls.vocab, entropy_threshold)
+        class_prob_dict = dict(zip(learn.dls.vocab, probs_list))
+
+        return {
+            'Image': image_path.name,
+            'Final_Label': final_label,
+            'Probabilities': class_prob_dict,
+            'Entropy': entropy
+        }
+    except Exception as e:
+        print(f"Error processing image {image_path}: {e}")
+        return {
+            'Image': image_path.name,
+            'Final_Label': "Error",
+            'Probabilities': [],
+            'Entropy': None
+        }
+
+def process_directory(learn, test_images_dir, entropy_threshold):
+    """
+    Process all images in the directory and perform entropy-based classification.
+
+    :param learn: Loaded Learner object.
+    :param test_images_dir: Path to the test images directory.
+    :param entropy_threshold: Entropy threshold for the test.
+    :return: List of prediction results.
+    """
+    predictions = []
+
+    for sub_dir in test_images_dir.iterdir():
+        if sub_dir.is_dir():
+            for image_file in sub_dir.iterdir():
+                if image_file.suffix.lower() in ['.jpg', '.png', '.jpeg', '.JPG']:
+                    result = predict_and_classify(learn, image_file, entropy_threshold=entropy_threshold)
+                    predictions.append(result)
+                    # Print detailed results with Final_Label
+                    if result['Entropy'] is not None:
+                        print(
+                            f"Image: {result['Image']}, "
+                            f"Final Label: {result['Final_Label']}, "
+                            f"Probabilities: {result['Probabilities']}, "
+                            f"Entropy: {result['Entropy']:.2f}"
+                        )
+                    else:
+                        print(
+                            f"Image: {result['Image']}, "
+                            f"Final Label: {result['Final_Label']}, "
+                            f"Probabilities: {result['Probabilities']}, "
+                            f"Entropy: N/A"
+                        )
+
+    return predictions
 
 def main():
-    model_dir = Path('C:/Users/ch3ss/PycharmProjects/ChessAI/models')
-    model_filename = 'chess_piece_model.pth'
+    """
+    Main function to orchestrate the testing process.
+    """
+    # --- Use your custom paths directly here ---
+    model_dir = r"G:\My Drive\ChessAIProject\models"
+    test_images_dir = r"G:\My Drive\ChessAIProject\ChessPieceImages\TestImages"
+
+    model_filename = 'chess_piece_model.pkl'  # Matches your saved model name
+
+    model_dir = Path(model_dir)
+    test_images_dir = Path(test_images_dir)
 
     learn = load_model(model_dir, model_filename)
 
-    # Path to the image you want to test
-    test_image_path = Path('C:/Users/ch3ss/PycharmProjects/ChessAI/TestImages/test_king6.jpg')
-    result = test_model(learn, test_image_path)
-    print(f'Result: {result}')
+    entropy_threshold = 0.7
+
+    """
+    predictions = process_directory(
+        learn,
+        test_images_dir,
+        entropy_threshold=entropy_threshold
+    )
+    """
+
+    #To test a single image
+
+    test_image_path = Path('G:/My Drive/ChessAIProject/ChessPieceImages/TestImages/Images/IMG_0774.JPG')
+    print(predict_and_classify(learn,test_image_path,entropy_threshold))
+
+
 
 if __name__ == '__main__':
     main()
