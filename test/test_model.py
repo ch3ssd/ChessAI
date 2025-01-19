@@ -1,6 +1,6 @@
 from fastai.vision.all import *
 from pathlib import Path
-from stat_tests import calculate_entropy, classify_entropy
+from entropy_util import calculate_entropy, classify_entropy
 
 def load_model(model_dir, model_filename):
     """
