@@ -33,11 +33,8 @@ def predict_and_classify(learn, image_path, entropy_threshold):
         pred_class, pred_idx, probs = learn.predict(img)
         probs_list = [float(p) for p in probs]
 
-        # Calculate entropy
-        entropy = calculate_entropy(probs_list)
-
         # Perform entropy-based classification to assign Final_Label
-        final_label = classify_entropy(probs_list, learn.dls.vocab, entropy_threshold)
+        final_label, entropy = classify_entropy(probs_list, learn.dls.vocab, entropy_threshold)
         class_prob_dict = dict(zip(learn.dls.vocab, probs_list))
 
         return {
