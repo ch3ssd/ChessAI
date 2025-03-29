@@ -7,6 +7,7 @@ from torchvision import transforms
 from rembg import remove
 from preprocess_training_images import preprocess_and_save_images
 
+
 @pytest.fixture
 def temp_image_dirs(tmp_path):
     input_dir = tmp_path / "input"
