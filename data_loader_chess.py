@@ -9,7 +9,7 @@ from pathlib import Path
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Paths to dataset
-DATA_DIR = Path("~/Google Drive/ChessAIProject/ChessPieceImages/TrainingImagesPreprocessed").expanduser()
+DATA_DIR = Path("./TrainingImagesPreprocessed").resolve()
 
 # Data augmentation and normalization for training
 train_transforms = transforms.Compose([
