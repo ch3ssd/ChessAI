@@ -26,6 +26,16 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt  
+        pip install gdown
+
+    - name: Download training images
+      run: |
+        # Replace the file ID below with your actual Google Drive file ID
+        gdown https://drive.google.com/uc?id=<1o50VIu51M11jbHXe5LFSVDfuQ-VNiwoS> -O TrainingImagesPreprocessed.zip
+
+    - name: Unzip the data
+      run: |
+        unzip TrainingImagesPreprocessed.zip -d /path/to/extract/directory
 
     - name: Run tests
       run: pytest -v  
