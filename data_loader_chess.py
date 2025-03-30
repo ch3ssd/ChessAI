@@ -1,10 +1,8 @@
 import torch
 import torch.nn as nn
-import torch.optim as optim
-from torchvision import transforms, datasets, models
+from torchvision import models, transforms, datasets
 from torch.utils.data import DataLoader
 from pathlib import Path
-
 
 class ChessPieceModel:
     def __init__(self, data_dir: str, batch_size: int = 32, device: torch.device = None):
@@ -16,8 +14,8 @@ class ChessPieceModel:
         self.batch_size = batch_size
 
         # Initialize the model and data loader
-        self.model = self._initialize_model()
         self.train_loader = self._initialize_data_loader()
+        self.model = self._initialize_model()
 
     def _initialize_data_loader(self):
         """Initialize the data loader with transformations and dataset."""
