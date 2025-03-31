@@ -2,11 +2,14 @@ import pytest
 import torch
 from data_loader_chess import ChessPieceModel
 
+# Google Drive shared link (change this to actual link)
+DRIVE_URL = "https://drive.google.com/file/d/1o50VIu51M11jbHXe5LFSVDfuQ-VNiwoS/view"
 
-@pytest.fixture
+
+@pytest.fixture(scope="session")
 def model_and_loader():
-    """Initialize the ChessPieceModel and return the model and data loader."""
-    model = ChessPieceModel(data_dir="./TrainingImagesPreprocessed")
+    """Initialize the ChessPieceModel with Google Drive dataset."""
+    model = ChessPieceModel(drive_url=DRIVE_URL)
     return model
 
 
@@ -34,8 +37,9 @@ def test_forward_pass(sample_batch, model_and_loader):
     images, _ = sample_batch
     images = images.to(model_and_loader.device)
 
-    with torch.no_grad():  # Disable gradients for testing
+    with torch.no_grad():
         output = model_and_loader.model(images)
 
     assert output.shape[0] == images.shape[0], "Model output batch size mismatch!"
     assert output.shape[1] == len(model_and_loader.train_loader.dataset.classes), "Model output class count mismatch!"
+
