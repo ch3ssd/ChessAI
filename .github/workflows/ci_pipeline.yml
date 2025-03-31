@@ -26,18 +26,43 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt  
-        pip install gdown
 
-    - name: Download training images
+    - name: Download training images if not already downloaded
       run: |
-        gdown https://drive.google.com/uc?id=1o50VIu51M11jbHXe5LFSVDfuQ-VNiwoS -O TrainingImagesPreprocessed.zip
+        set -e  # Exit on error
+        if [ ! -f TrainingImagesPreprocessed.zip ]; then
+          echo "Downloading dataset from Google Drive..."
+          gdown --fuzzy https://drive.google.com/uc?id=1o50VIu51M11jbHXe5LFSVDfuQ-VNiwoS -O TrainingImagesPreprocessed.zip
+        else
+          echo "Dataset already downloaded, skipping."
+        fi
 
     - name: Unzip the data into the correct directory
       run: |
-        mkdir -p TrainingImagesPreprocessed
-        unzip TrainingImagesPreprocessed.zip -d TrainingImagesPreprocessed  # Unzip the data
+        set -e  # Exit on error
+        if [ ! -d "TrainingImagesPreprocessed" ]; then
+          mkdir -p TrainingImagesPreprocessed
+          unzip -o TrainingImagesPreprocessed.zip -d TrainingImagesPreprocessed  # Overwrite existing files
+          echo "Dataset extracted successfully."
+        else
+          echo "Dataset already exists, skipping extraction."
+        fi
+
+    - name: Validate dataset
+      run: |
+        set -e  # Exit on error
+        if [ -d "TrainingImagesPreprocessed" ]; then
+          echo "Dataset found. Checking structure..."
+          ls -l TrainingImagesPreprocessed
+          echo "Number of classes detected:"
+          find TrainingImagesPreprocessed -mindepth 1 -maxdepth 1 -type d | wc -l
+        else
+          echo "Dataset not found! Exiting."
+          exit 1
+        fi
 
     - name: Run tests
       run: pytest -v
+
 
 
