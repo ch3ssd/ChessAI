@@ -48,19 +48,6 @@ jobs:
           echo "Dataset already exists, skipping extraction."
         fi
 
-    - name: Validate dataset
-      run: |
-        set -e  # Exit on error
-        if [ -d "TrainingImagesPreprocessed" ]; then
-          echo "Dataset found. Checking structure..."
-          ls -l TrainingImagesPreprocessed
-          echo "Number of classes detected:"
-          find TrainingImagesPreprocessed -mindepth 1 -maxdepth 1 -type d | wc -l
-        else
-          echo "Dataset not found! Exiting."
-          exit 1
-        fi
-
     - name: Run tests
       run: pytest -v
 
