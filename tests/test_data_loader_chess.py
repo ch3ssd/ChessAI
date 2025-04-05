@@ -5,6 +5,7 @@ from data_loader_chess import ChessPieceModel
 # Google Drive shared link (change this to actual link)
 DRIVE_URL = "https://drive.google.com/uc?export=download&id=1o50VIu51M11jbHXe5LFSVDfuQ-VNiwoS"
 
+
 @pytest.fixture(scope="session")
 def model_and_loader():
     """Initialize the ChessPieceModel with Google Drive dataset."""
