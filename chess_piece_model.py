@@ -18,10 +18,10 @@ class ChessPieceModel:
 
         # Ensure dataset is available (this step is handled by CI)
         if drive_url:
-            self._download_and_extract_data(drive_url)
+            self.download_and_extract_data(drive_url)
 
-        self.train_loader, self.val_loader = self._initialize_data_loader()
-        self.model = self._initialize_model()
+        self.train_loader, self.val_loader = self.initialize_data_loader()
+        self.model = self.initialize_model()
 
     def download_and_extract_data(self, drive_url):
         """Download and extract dataset if not available."""
@@ -56,7 +56,7 @@ class ChessPieceModel:
 
     def initialize_data_loader(self):
         """Initialize the data loader with transformations and dataset."""
-        train_transforms, val_transforms = self._get_data_transforms()
+        train_transforms, val_transforms = self.get_data_transforms()
 
         # Load the entire dataset
         full_dataset = datasets.ImageFolder(root=str(self.data_dir), transform=train_transforms)
