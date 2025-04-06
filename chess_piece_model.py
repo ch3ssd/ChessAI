@@ -20,7 +20,8 @@ class ChessPieceModel:
         if drive_url:
             self.download_and_extract_data(drive_url)
 
-        self.train_loader, self.val_loader = self.initialize_data_loader()
+        # Initialize the model with proper data loaders
+        self.original_dataset, self.train_loader, self.val_loader = self.initialize_data_loader()
         self.model = self.initialize_model()
 
     def download_and_extract_data(self, drive_url):
@@ -73,14 +74,15 @@ class ChessPieceModel:
         train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=4)
         val_loader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=False, num_workers=4)
 
-        return train_loader, val_loader
+        return full_dataset, train_loader, val_loader  # Return full dataset reference
 
     def initialize_model(self):
         """Load a pre-trained ResNet-50 model and modify the fully connected layer for chess classification."""
         model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V1)
         num_features = model.fc.in_features
 
-        num_classes = len(self.train_loader.dataset.dataset.classes)
+        # Access the classes attribute from the original dataset (ImageFolder)
+        num_classes = len(self.original_dataset.classes)  # Access classes from the full dataset
 
         model.fc = nn.Linear(num_features, num_classes)
         return model.to(self.device)
@@ -94,7 +96,8 @@ class ChessPieceModel:
             output = self.model(sample_images)
 
         print(f"Loaded batch shape: {sample_images.shape}")
-        print(f"Number of classes detected: {len(self.train_loader.dataset.classes)}")
+        print(f"Number of classes detected: {len(self.original_dataset.classes)}")  # Access from full dataset
         print(f"Model output shape: {output.shape}")
+
 
 
