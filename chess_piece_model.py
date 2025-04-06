@@ -79,7 +79,9 @@ class ChessPieceModel:
         """Load a pre-trained ResNet-50 model and modify the fully connected layer for chess classification."""
         model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V1)
         num_features = model.fc.in_features
-        num_classes = len(self.train_loader.dataset.classes)  # Get number of classes from train_loader
+
+        num_classes = len(self.train_loader.dataset.dataset.classes)
+
         model.fc = nn.Linear(num_features, num_classes)
         return model.to(self.device)
 
