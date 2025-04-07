@@ -100,4 +100,3 @@ class ChessPieceModel:
         print(f"Model output shape: {output.shape}")
 
 
-
