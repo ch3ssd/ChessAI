@@ -3,8 +3,8 @@ import torch
 import os
 from chess_piece_model import ChessPieceModel
 
-# Path to the config.properties file located at the root of the project
-CONFIG_PATH = "../config.properties"
+# Correct path to the config.properties file
+CONFIG_PATH = "./config.properties"
 
 @pytest.fixture(scope="session")
 def model_and_loader():
@@ -52,4 +52,5 @@ def test_forward_pass(sample_batch, model_and_loader):
 
     assert output.shape[0] == images.shape[0], "Model output batch size mismatch!"
     assert output.shape[1] == len(model_and_loader.original_dataset.classes), "Model output class count mismatch!"
+
 
