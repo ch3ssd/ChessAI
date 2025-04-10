@@ -15,12 +15,14 @@ def trainer():
 
 
 def test_initialization(trainer):
+    """Test initialization of the ChessTrainer"""
     assert trainer.model is not None
     assert trainer.criterion is not None
     assert trainer.optimizer is not None
 
 
 def test_train_one_epoch(trainer):
+    """Test that the train_one_epoch function returns a valid loss and accuracy"""
     train_loss, train_acc = trainer.train_one_epoch()
     assert isinstance(train_loss, float)
     assert isinstance(train_acc, float)
@@ -28,6 +30,7 @@ def test_train_one_epoch(trainer):
 
 
 def test_validate(trainer):
+    """Test that the validate function returns a valid validation loss and accuracy"""
     val_loss, val_acc = trainer.validate()
     assert isinstance(val_loss, float)
     assert isinstance(val_acc, float)
