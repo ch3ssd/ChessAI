@@ -1,12 +1,11 @@
 name: CI/CD Pipeline
 
 on:
-  workflow_dispatch: {}  
+  workflow_dispatch:
   push:
     branches:
       - "feature/*"
       - "bugfix/*"
-      - "main/*"
   pull_request:
     branches: [ "main" ]
 
@@ -53,7 +52,5 @@ jobs:
         fi
 
     - name: Run tests with coverage
-      run: pytest -v --cov=./ --cov-report=json --cov-fail-under=90
-
-
-
+      run: |
+          pytest --cov=./ --cov-report=json --cov-fail-under=90
