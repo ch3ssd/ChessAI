@@ -52,7 +52,11 @@ jobs:
         fi
 
     - name: Run tests with coverage
-      id: run-test
+      run: |
+          pytest --cov=./ --cov-report=json
+
+    - name: Run coverage
+      id: run-coverage
       uses: JotaFan/pycoverage@v1.0.0
       with:
         cov-omit-list: tests/*
@@ -63,6 +67,3 @@ jobs:
         package-extras: dev,tests
         github_token: ${{ secrets.GITHUB_TOKEN }}
         working_branch: ${{ github.head_ref }}
-
-
-
