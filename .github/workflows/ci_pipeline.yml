@@ -1,11 +1,12 @@
 name: CI/CD Pipeline
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}  
   push:
     branches:
       - "feature/*"
       - "bugfix/*"
+      - "main/*"
   pull_request:
     branches: [ "main" ]
 
@@ -51,9 +52,12 @@ jobs:
           echo "Dataset already exists, skipping extraction."
         fi
 
+    - name: Run tests
+      run: pytest -v --cov=./ --cov-report=json
+
     - name: Run tests with coverage
       run: |
-          pytest --cov=./ --cov-report=json
+        pytest --cov=./ --cov-report=json
 
     - name: Run coverage
       id: run-coverage
@@ -67,3 +71,6 @@ jobs:
         package-extras: dev,tests
         github_token: ${{ secrets.GITHUB_TOKEN }}
         working_branch: ${{ github.head_ref }}
+
+
+
