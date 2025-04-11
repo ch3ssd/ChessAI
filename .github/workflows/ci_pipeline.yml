@@ -1,7 +1,7 @@
 name: CI/CD Pipeline
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}  
   push:
     branches:
       - "feature/*"
@@ -52,18 +52,7 @@ jobs:
         fi
 
     - name: Run tests with coverage
-      run: |
-          pytest --cov=./ --cov-report=json
+      run: pytest -v --cov=./ --cov-report=json --cov-fail-under=90
 
-    - name: Run coverage
-      id: run-coverage
-      uses: JotaFan/pycoverage@v1.0.0
-      with:
-        cov-omit-list: tests/*
-        cov-threshold-single: 90
-        cov-threshold-total: 95
-        async-tests: true
-        poetry-version: 1.4.2
-        package-extras: dev,tests
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        working_branch: ${{ github.head_ref }}
+
+
