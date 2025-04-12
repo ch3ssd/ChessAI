@@ -6,12 +6,17 @@ on:
     branches:
       - "feature/*"
       - "bugfix/*"
+      - "main"
   pull_request:
     branches: [ "main" ]
 
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
     strategy:
       matrix:
         python-version: [3.12]
@@ -51,6 +56,15 @@ jobs:
           echo "Dataset already exists, skipping extraction."
         fi
 
-    - name: Run tests with coverage
+    - name: Run Pytest with report
       run: |
-          pytest --cov=./ --cov-report=json --cov-fail-under=90
+          pytest --cov=./ --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=app tests/ | tee pytest-coverage.txt
+
+    #- name: Pytest coverage comment
+    #  uses: MishaKav/pytest-coverage-comment@main
+   #   with:
+    #    pytest-coverage-path: pytest-coverage.txt
+    #    junitxml-path: pytest.xml
+
+    - name: Check coverage
+      run: pytest --cov=./ --cov-fail-under=90

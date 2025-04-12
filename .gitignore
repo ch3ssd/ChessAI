@@ -6,5 +6,6 @@ venv/
 chess_piece_model.pth
 .coverage.*
 .coverage
-coverage.json
+pytest-coverage.txt
+pytest.xml
 TrainingImagesPreprocessed/*
