@@ -13,10 +13,7 @@ on:
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      issues: write
-      pull-requests: write
+    permissions: write-all
     strategy:
       matrix:
         python-version: [3.12]
@@ -60,11 +57,10 @@ jobs:
       run: |
           pytest --cov=./ --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=app tests/ | tee pytest-coverage.txt
 
-    #- name: Pytest coverage comment
-    #  uses: MishaKav/pytest-coverage-comment@main
-   #   with:
-    #    pytest-coverage-path: pytest-coverage.txt
-    #    junitxml-path: pytest.xml
+    - name: Pytest coverage commentator
+      uses: coroo/pytest-coverage-commentator@v1.0.2
+      with:
+          pytest-coverage: pytest-coverage.txt
 
     - name: Check coverage
       run: pytest --cov=./ --cov-fail-under=90
