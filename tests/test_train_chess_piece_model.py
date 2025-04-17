@@ -45,3 +45,7 @@ def test_validate(trainer):
 def test_train_full_run(trainer):
     """Test the train method end-to-end with a small number of epochs"""
     trainer.train(epochs=1)  # Run one epoch just to hit the method
+
+def test_train_zero_epochs(trainer):
+    """Ensure training with zero epochs does not crash and prints correctly"""
+    trainer.train(epochs=0)  # Should do nothing but still run safely

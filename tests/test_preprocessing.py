@@ -41,3 +41,33 @@ def test_preprocess_and_save_images(temp_image_dirs):
 
     print("Test passed: Image preprocessing function works correctly!")
 
+def test_preprocess_image_error_handling(monkeypatch, temp_image_dirs):
+    input_dir, output_dir, dummy_image_path = temp_image_dirs
+
+    # Monkeypatch Image.open to raise an error
+    def broken_open(*args, **kwargs):
+        raise OSError("Simulated image open error")
+
+    monkeypatch.setattr("PIL.Image.open", broken_open)
+
+    # Should not crash even if an image fails to open
+    preprocess_and_save_images(input_dir, output_dir)
+
+    # Output dir should still be created, but image won't be saved
+    output_image_path = output_dir / "dummy.png"
+    assert not output_image_path.exists()
+
+def test_transformation_output_shape(temp_image_dirs):
+    input_dir, _, dummy_image_path = temp_image_dirs
+
+    image = Image.open(dummy_image_path).convert("RGBA")
+    image_no_bg = remove(image).convert("RGB")
+
+    transform = transforms.Compose([
+        transforms.Resize((128, 128)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.5], std=[0.5])
+    ])
+
+    tensor = transform(image_no_bg)
+    assert tensor.shape == (3, 128, 128), "Unexpected tensor shape after transform"

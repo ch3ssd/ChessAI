@@ -70,3 +70,41 @@ def test_forward_pass(sample_batch, model_and_loader):
 
 def test_load_data_into_model(model_and_loader):
     model_and_loader.load_data_into_model()  # Also exercises print/debug logic
+
+def test_skip_download_if_data_exists(monkeypatch, tmp_path):
+    """Test download logic is skipped if data directory already exists."""
+    # Setup fake config
+    data_dir = tmp_path / "TrainingImagesPreprocessed"
+    data_dir.mkdir(parents=True, exist_ok=True)
+
+    config = configparser.ConfigParser()
+    config.read(CONFIG_PATH)
+    config["DATA"]["DataDirectory"] = str(data_dir)
+
+    # Monkeypatch config loader to use our temp config
+    def fake_load_config(self, path): return config
+    monkeypatch.setattr(ChessPieceModel, "load_config", fake_load_config)
+
+    model = ChessPieceModel(drive_url="http://fake-url.com/skip.zip", config_path="fake-path")
+    # Should not raise or attempt download
+
+def test_download_failure(monkeypatch, tmp_path):
+    """Test that download raises error when status code is not 200."""
+    data_dir = tmp_path / "TrainingImagesPreprocessed"
+
+    config = configparser.ConfigParser()
+    config.read(CONFIG_PATH)
+    config["DATA"]["DataDirectory"] = str(data_dir)
+
+    # Monkeypatch config loader
+    def fake_load_config(self, path): return config
+    monkeypatch.setattr(ChessPieceModel, "load_config", fake_load_config)
+
+    # Monkeypatch requests.get to return mock failure
+    class FakeResponse:
+        status_code = 404
+    monkeypatch.setattr("requests.get", lambda *args, **kwargs: FakeResponse())
+
+    with pytest.raises(RuntimeError, match="Failed to download dataset"):
+        ChessPieceModel(drive_url="http://fake-url.com/fail.zip", config_path="fake-path")
+
