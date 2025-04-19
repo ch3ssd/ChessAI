@@ -3,10 +3,13 @@ import torch.nn as nn
 import torch.optim as optim
 from chess_piece_model import ChessPieceModel
 import configparser
+from pathlib import Path
 
 
 class ChessTrainer:
-    def __init__(self, model_wrapper: ChessPieceModel, learning_rate: float = 0.001):
+    def __init__(self, model_wrapper: ChessPieceModel, config_path: str, learning_rate: float = 0.001):
+        self.config = self.load_config(config_path)
+        self.save_path = Path(self.config["MODEL"]["SavePath"])
         self.model_wrapper = model_wrapper
         self.model = model_wrapper.model
         self.train_loader = model_wrapper.train_loader
@@ -15,6 +18,11 @@ class ChessTrainer:
 
         self.criterion = nn.CrossEntropyLoss()
         self.optimizer = optim.Adam(self.model.parameters(), lr=learning_rate)
+
+    def load_config(self, config_path: str):
+        config = configparser.ConfigParser()
+        config.read(config_path)
+        return config
 
     def train(self, epochs: int):
         for epoch in range(epochs):
@@ -43,7 +51,8 @@ class ChessTrainer:
 
             self.validate()
 
-        print("Training complete!")
+        self.save_model()
+        print(f"Training complete. Model saved to {self.save_path.resolve()}")
 
     def train_one_epoch(self):
         self.model.train()
@@ -91,6 +100,10 @@ class ChessTrainer:
         print(f"Validation Loss: {avg_loss:.4f}, Accuracy: {accuracy:.2f}%")
         return avg_loss, accuracy
 
+    def save_model(self):
+        self.save_path.parent.mkdir(parents=True, exist_ok=True)
+        torch.save(self.model.state_dict(), self.save_path)
+
 
 if __name__ == "__main__":
     CONFIG_PATH = "config.properties"
@@ -98,8 +111,8 @@ if __name__ == "__main__":
 
     config = configparser.ConfigParser()
     config.read(CONFIG_PATH)
-    DRIVE_URL = config["DATA"]["DriveURL"]
+    drive_url = config["DATA"]["DriveURL"]
 
-    model_wrapper = ChessPieceModel(drive_url=DRIVE_URL, config_path=CONFIG_PATH)
-    trainer = ChessTrainer(model_wrapper)
+    model_wrapper = ChessPieceModel(drive_url=drive_url, config_path=CONFIG_PATH)
+    trainer = ChessTrainer(model_wrapper, config_path=CONFIG_PATH)
     trainer.train(epochs=EPOCHS)
