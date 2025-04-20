@@ -4,6 +4,7 @@ import torch.optim as optim
 from chess_piece_model import ChessPieceModel
 import configparser
 from pathlib import Path
+import os
 
 
 class ChessTrainer:
@@ -105,6 +106,10 @@ class ChessTrainer:
         torch.save(self.model.state_dict(), self.save_path)
 
 
+def should_skip_training(model_path: Path):
+    return model_path.exists() and model_path.is_file()
+
+
 if __name__ == "__main__":
     CONFIG_PATH = "config.properties"
     EPOCHS = 10
@@ -112,7 +117,11 @@ if __name__ == "__main__":
     config = configparser.ConfigParser()
     config.read(CONFIG_PATH)
     drive_url = config["DATA"]["DriveURL"]
+    model_path = Path(config["MODEL"]["SavePath"])
 
-    model_wrapper = ChessPieceModel(drive_url=drive_url, config_path=CONFIG_PATH)
-    trainer = ChessTrainer(model_wrapper, config_path=CONFIG_PATH)
-    trainer.train(epochs=EPOCHS)
+    if should_skip_training(model_path):
+        print(f"Model already exists at {model_path}. Skipping training.")
+    else:
+        model_wrapper = ChessPieceModel(drive_url=drive_url, config_path=CONFIG_PATH)
+        trainer = ChessTrainer(model_wrapper, config_path=CONFIG_PATH)
+        trainer.train(epochs=EPOCHS)
