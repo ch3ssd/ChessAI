@@ -1,6 +1,5 @@
 import os
 from io import BytesIO
-
 import pytest
 import torch
 import zipfile
@@ -21,10 +20,13 @@ def dummy_config(tmp_path):
     config = configparser.ConfigParser()
     test_data_dir = tmp_path / "TestImages"
     (test_data_dir / "TestImages" / "Knight").mkdir(parents=True, exist_ok=True)
+    (test_data_dir / "TestImages" / "Bishop").mkdir(parents=True, exist_ok=True)
 
-    # Create dummy image
-    img_path = test_data_dir / "TestImages" / "Knight" / "dummy.jpg"
-    Image.new("RGB", (224, 224)).save(img_path)
+    # Create dummy image files
+    knight_img = test_data_dir / "TestImages" / "Knight" / "knight.jpg"
+    bishop_img = test_data_dir / "TestImages" / "Bishop" / "bishop.jpg"
+    Image.new("RGB", (224, 224)).save(knight_img)
+    Image.new("RGB", (224, 224)).save(bishop_img)
 
     config["MODEL"] = {
         "SavePath": str(tmp_path / "model.pth")
@@ -69,7 +71,6 @@ def test_download_and_extract_if_missing(mock_get, tmp_path):
     mock_response.content = zip_buf.getvalue()
     mock_get.return_value = mock_response
 
-    # Run download
     download_and_extract_if_missing(dummy_dir, "https://fake.url")
     assert dummy_dir.exists()
 
@@ -79,32 +80,42 @@ def test_download_and_extract_if_missing(mock_get, tmp_path):
 @mock.patch("predict_chess_pieces.ChessPieceModel")
 @mock.patch("predict_chess_pieces.datasets.ImageFolder")
 @mock.patch("predict_chess_pieces.DataLoader")
-def test_main_flow(mock_loader, mock_folder, mock_model_cls, mock_torch_load, mock_download, dummy_config, dummy_model_file,
-                   dummy_model_cls=None):
+def test_main_flow(mock_loader, mock_folder, mock_model_cls, mock_torch_load, mock_download,
+                   dummy_config, dummy_model_file, capsys):
     config_path, test_dir = dummy_config
 
-    # Prepare mock model output
+    # Mock model that returns logits
     dummy_model = mock.Mock()
-    dummy_model.eval.return_value = None
-    dummy_model.return_value = dummy_model
-    dummy_model_cls.return_value.model = dummy_model
-    dummy_model_cls.return_value.model.return_value = torch.randn(1, 2)
+    dummy_model.eval = mock.Mock()
+    dummy_model.__call__ = mock.Mock(return_value=torch.tensor([[2.0, 1.0]]))  # predicts class 0
 
-    # Mock test dataset
-    dummy_sample_path = str(test_dir / "TestImages" / "Knight" / "dummy.jpg")
+    mock_model_cls.return_value.model = dummy_model
+
+    # Mock dataset
     mock_folder.return_value.classes = ["Knight", "Bishop"]
-    mock_folder.return_value.samples = [(dummy_sample_path, 0)]
-    mock_loader.return_value = [(torch.randn(1, 3, 224, 224), torch.tensor([0]))]
+    mock_folder.return_value.samples = [
+        ("/some/path/Knight/img1.jpg", 0),
+        ("/some/path/Bishop/img2.jpg", 1)
+    ]
+
+    mock_loader.return_value = [
+        (torch.randn(1, 3, 224, 224), torch.tensor([0])),  # correct prediction
+        (torch.randn(1, 3, 224, 224), torch.tensor([1]))   # incorrect prediction
+    ]
 
     # Ensure model file exists
     model_path = Path(config_path).parent / "model.pth"
     torch.save(torch.nn.Linear(10, 2).state_dict(), model_path)
 
-    # Replace config.properties in working dir for main()
+    # Replace config.properties in working directory
     shutil.copy(config_path, "config.properties")
 
     try:
         predict_main()
+        captured = capsys.readouterr()
+        assert "Prediction Results with Class Probabilities" in captured.out
+        assert "Correct" in captured.out or "Incorrect" in captured.out
+        assert "Class Probabilities:" in captured.out
     finally:
         if os.path.exists("config.properties"):
             os.remove("config.properties")
