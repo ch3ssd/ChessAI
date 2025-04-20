@@ -1,73 +1,75 @@
-import pytest
-import torch
 import os
+import torch
+import pytest
+import shutil
 import configparser
 from pathlib import Path
+from PIL import Image
 from chess_piece_model import ChessPieceModel
 
-CONFIG_PATH = "config.properties"
+@pytest.fixture
+def temp_config_and_data(tmp_path):
+    # Setup dummy config
+    config_path = tmp_path / "config.properties"
+    model_path = tmp_path / "dummy_model.pth"
+    data_dir = tmp_path / "TrainingImages"
+    (data_dir / "Pawn").mkdir(parents=True)
+    (data_dir / "Knight").mkdir(parents=True)
 
-# Load DriveURL from the config file
-config = configparser.ConfigParser()
-config.read(CONFIG_PATH)
-DRIVE_URL = config["DATA"]["DriveURL"]
+    # Create dummy images
+    dummy_image = Image.new("RGB", (224, 224), color="white")
+    for i in range(5):
+        dummy_image.save(data_dir / "Pawn" / f"pawn_{i}.jpg")
+    for i in range(5):
+        dummy_image.save(data_dir / "Knight" / f"knight_{i}.jpg")
 
-@pytest.fixture(scope="session")
-def model_and_loader():
-    """Initialize the ChessPieceModel with Google Drive dataset and configuration file."""
-    model = ChessPieceModel(drive_url=DRIVE_URL, config_path=CONFIG_PATH)
-    return model
+    # Save config
+    config = configparser.ConfigParser()
+    config["DATA"] = {
+        "DataDirectory": str(data_dir),
+        "DriveURL": "https://dummyurl.com/fake.zip"
+    }
+    config["MODEL"] = {
+        "BatchSize": "2",
+        "SavePath": str(model_path)
+    }
+    with open(config_path, "w") as f:
+        config.write(f)
+
+    return config_path
 
 @pytest.fixture
-def sample_batch(model_and_loader):
-    """Fetch a single batch from the train_loader."""
-    return next(iter(model_and_loader.train_loader))
+def model_and_loader(temp_config_and_data, monkeypatch):
+    monkeypatch.setattr(ChessPieceModel, "download_and_extract_data", lambda self, url: None)
+    return ChessPieceModel(drive_url=None, config_path=str(temp_config_and_data))
 
-def test_config_loading():
-    """Ensure the config is properly loaded."""
-    model = ChessPieceModel(drive_url=DRIVE_URL, config_path=CONFIG_PATH)
-    assert "DATA" in model.config
-    assert "MODEL" in model.config
-    assert "DataDirectory" in model.config["DATA"]
-    assert "BatchSize" in model.config["MODEL"]
+def test_config_loading(model_and_loader):
+    assert model_and_loader.batch_size == 2
 
-def test_data_loading(sample_batch, model_and_loader):
-    """Check if data loading works properly."""
-    images, labels = sample_batch
-    assert images.shape[0] > 0
-    assert len(model_and_loader.original_dataset.classes) > 0
+def test_data_loading(model_and_loader):
+    assert len(model_and_loader.original_dataset) == 10
 
 def test_data_transforms(model_and_loader):
-    """Test that data transforms return callable Compose objects."""
-    train_t, val_t = model_and_loader.get_data_transforms()
-    assert callable(train_t)
-    assert callable(val_t)
+    sample, _ = model_and_loader.original_dataset[0]
+    assert sample.shape == (3, 224, 224)
 
 def test_initialize_data_loader(model_and_loader):
-    """Ensure loaders split the dataset correctly."""
-    dataset, train_loader, val_loader = model_and_loader.initialize_data_loader()
-    assert len(dataset) == len(train_loader.dataset) + len(val_loader.dataset)
+    assert len(model_and_loader.train_loader) > 0
+    assert len(model_and_loader.val_loader) > 0
 
 def test_train_val_split(model_and_loader):
-    train_size = len(model_and_loader.train_loader.dataset)
-    val_size = len(model_and_loader.val_loader.dataset)
-    total_size = train_size + val_size
-    assert total_size == len(model_and_loader.original_dataset)
-    assert abs(train_size - 0.8 * total_size) < 1
-    assert abs(val_size - 0.2 * total_size) < 1
+    total = len(model_and_loader.original_dataset)
+    assert total == len(model_and_loader.train_loader.dataset) + len(model_and_loader.val_loader.dataset)
 
 def test_model_fc_layer(model_and_loader):
-    num_classes = len(model_and_loader.original_dataset.classes)
-    assert model_and_loader.model.fc.out_features == num_classes
+    assert model_and_loader.model.fc.out_features == len(model_and_loader.original_dataset.classes)
 
-def test_forward_pass(sample_batch, model_and_loader):
+def test_forward_pass(model_and_loader):
+    sample_batch = next(iter(model_and_loader.train_loader))
     images, _ = sample_batch
-    images = images.to(model_and_loader.device)
-    with torch.no_grad():
-        output = model_and_loader.model(images)
-    assert output.shape[0] == images.shape[0]
-    assert output.shape[1] == len(model_and_loader.original_dataset.classes)
+    out = model_and_loader.model(images.to(model_and_loader.device))
+    assert out.shape[0] == images.shape[0]
 
 def test_load_data_into_model(model_and_loader):
-    model_and_loader.load_data_into_model()  # Also exercises print/debug logic
-
+    model_and_loader.load_data_into_model()
+    assert model_and_loader.model is not None

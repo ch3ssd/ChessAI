@@ -55,7 +55,11 @@ jobs:
 
     - name: Run Pytest with report
       run: |
-          pytest --cov=./ --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=app tests/ | tee pytest-coverage.txt
+          pytest \
+            --cov=. \
+            --junitxml=pytest.xml \
+            --cov-report=term-missing:skip-covered \
+            tests/ | tee pytest-coverage.txt
 
     - name: Pytest coverage commentator
       uses: coroo/pytest-coverage-commentator@v1.0.2
